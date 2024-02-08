@@ -1,0 +1,34 @@
+on:
+  release:
+    types: [created]
+
+permissions:
+    contents: write
+    packages: write
+
+jobs:
+  releases-matrix:
+    name: Release mutagen faux-ssh binary
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # build and publish in parallel: linux/amd64, linux/arm64, windows/amd64, darwin/amd64, darwin/arm64
+        goos: [linux, windows, darwin]
+        goarch: [amd64, arm64]
+        exclude:
+          - goarch: arm64
+            goos: windows
+    steps:
+    - uses: actions/checkout@v4
+    - uses: wangyoucao577/go-release-action@23b3194d60e5291b78d4ebf84705f5d6c5a74c0e #v1.46
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        build_command: "go build -o main"
+        binary_name: "ssh"
+        asset_name: "mutagen-faux-ssh-${{ github.event.release.tag_name }}-${{ matrix.goos }}-${{ matrix.goarch }}"
+        sha256sum: TRUE
+        goos: ${{ matrix.goos }}
+        goarch: ${{ matrix.goarch }}
+        goversion: "1.21.6"
+        project_path: "./src"
+        extra_files: LICENSE
